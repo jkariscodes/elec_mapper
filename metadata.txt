@@ -12,8 +12,8 @@ email=joehene@gmail.com
 
 about=This plugin creates and digitizes pylon location as points and grid connectors as lines layers in QGIS.
 
-tracker=https://github.com/jkariukidev/elec_mapper/issues
-repository=https://github.com/jkariukidev/elec_mapper
+tracker=https://github.com/jkariukidev/elec-mapper/issues
+repository=https://github.com/jkariukidev/elecmapper
 # End of mandatory metadata
 
 # Recommended items:
