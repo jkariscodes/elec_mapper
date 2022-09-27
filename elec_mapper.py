@@ -27,6 +27,9 @@ from qgis.PyQt.QtWidgets import QAction
 # Initialize Qt resources from file resources.py
 from .resources import *
 
+from qgis.core import Qgis, QgsProject, QgsVectorLayer
+from qgis.gui import QgsMessageBar
+
 # Import the code for the DockWidget
 from .elec_mapper_dockwidget import ElecMapperDockWidget
 import os.path
@@ -68,11 +71,10 @@ class ElecMapper:
         self.toolbar = self.iface.addToolBar(u'ElecMapper')
         self.toolbar.setObjectName(u'ElecMapper')
 
-        #print "** INITIALIZING ElecMapper"
+        # print "** INITIALIZING ElecMapper"
 
         self.pluginIsActive = False
         self.dockwidget = None
-
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -89,18 +91,17 @@ class ElecMapper:
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('ElecMapper', message)
 
-
     def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
+            self,
+            icon_path,
+            text,
+            callback,
+            enabled_flag=True,
+            add_to_menu=True,
+            add_to_toolbar=True,
+            status_tip=None,
+            whats_this=None,
+            parent=None):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -163,7 +164,6 @@ class ElecMapper:
 
         return action
 
-
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
@@ -174,12 +174,12 @@ class ElecMapper:
             callback=self.run,
             parent=self.iface.mainWindow())
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
 
-        #print "** CLOSING ElecMapper"
+        # print "** CLOSING ElecMapper"
 
         # disconnects
         self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
@@ -192,11 +192,10 @@ class ElecMapper:
 
         self.pluginIsActive = False
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
 
-        #print "** UNLOAD ElecMapper"
+        # print "** UNLOAD ElecMapper"
 
         for action in self.actions:
             self.iface.removePluginVectorMenu(
@@ -206,7 +205,7 @@ class ElecMapper:
         # remove the toolbar
         del self.toolbar
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     def run(self):
         """Run method that loads and starts the plugin"""
@@ -214,12 +213,12 @@ class ElecMapper:
         if not self.pluginIsActive:
             self.pluginIsActive = True
 
-            #print "** STARTING ElecMapper"
+            # print "** STARTING ElecMapper"
 
             # dockwidget may not exist if:
             #    first run of plugin
             #    removed on close (see self.onClosePlugin method)
-            if self.dockwidget == None:
+            if not self.dockwidget:
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = ElecMapperDockWidget()
 
@@ -230,3 +229,30 @@ class ElecMapper:
             # TODO: fix to allow choice of dock location
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
+            self._check_layers_exist()
+
+    def _check_layers_exist(self):
+        """
+        Check if the default layers exist otherwise, inform user.
+        """
+        cable, pole = 'cable', 'pole'
+        lyr_root = QgsProject.instance().layerTreeRoot()
+        lyr_items = lyr_root.children()
+        lyr_names = [f.name() for f in lyr_items]
+        message = self.tr('layer is not available. Loading layer from memory')
+        if 'cable' not in lyr_names:
+            cb_message = self.tr('Cable ') + message
+            self.iface.messageBar().pushMessage('', cb_message, level=Qgis.Warning, duration=2)
+            self._create_default_layers(cable)
+
+        if 'pole' not in lyr_names:
+            pl_message = self.tr('Pole ') + message
+            self.iface.messageBar().pushMessage('', pl_message, level=Qgis.Warning, duration=2)
+            self._create_default_layers(pole)
+
+    def _create_default_layers(self, name):
+        """
+        """
+        pass
+
+
