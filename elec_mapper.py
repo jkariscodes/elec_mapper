@@ -243,16 +243,18 @@ class ElecMapper:
         if 'cable' not in lyr_names:
             cb_message = self.tr('Cable ') + message
             self.iface.messageBar().pushMessage('', cb_message, level=Qgis.Warning, duration=2)
-            self._create_default_layers(cable)
+            self._create_default_layers(cable, 'LineString')
 
         if 'pole' not in lyr_names:
             pl_message = self.tr('Pole ') + message
             self.iface.messageBar().pushMessage('', pl_message, level=Qgis.Warning, duration=2)
-            self._create_default_layers(pole)
+            self._create_default_layers(pole, 'Point')
 
-    def _create_default_layers(self, name):
+    def _create_default_layers(self, name, geom_type):
         """
+        Create default layers that are required by the plugin.
         """
-        pass
+        v_layer = QgsVectorLayer(geom_type, name, 'memory')
+        QgsProject.instance().addMapLayer(v_layer)
 
 
