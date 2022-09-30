@@ -16,9 +16,9 @@
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QPushButton" name="btnMapElec">
+     <widget class="QPushButton" name="btnDrawCable">
       <property name="text">
-       <string>Create Grid</string>
+       <string>Digitize Cable</string>
       </property>
      </widget>
     </item>
