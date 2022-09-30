@@ -21,13 +21,25 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
+from qgis.PyQt.QtCore import (
+    QSettings,
+    QTranslator,
+    QCoreApplication,
+    Qt,
+    QVariant
+)
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QMessageBox
 # Initialize Qt resources from file resources.py
 from .resources import *
 
-from qgis.core import Qgis, QgsProject, QgsVectorLayer
+from qgis.core import (
+    Qgis,
+    QgsProject,
+    QgsVectorLayer,
+    QgsField,
+    QgsVectorDataProvider
+)
 from qgis.gui import QgsMessageBar
 
 # Import the code for the DockWidget
@@ -224,6 +236,8 @@ class ElecMapper:
 
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
+            # connect sinals to their slots
+            self.dockwidget.btnDrawCable.clicked.connect(self._digitize_cable)
 
             # show the dockwidget
             # TODO: fix to allow choice of dock location
@@ -256,5 +270,40 @@ class ElecMapper:
         """
         v_layer = QgsVectorLayer(geom_type, name, 'memory')
         QgsProject.instance().addMapLayer(v_layer)
+
+    def _digitize_cable(self):
+        """
+        Start an active edit session on the cable layer.
+        """
+        # Get list of layer names
+        layer_names = [
+            layer.name() for layer in QgsProject.instance().mapLayers().values()
+        ]
+        # If cable not in list of layer names, notify to reload
+        if 'cable' not in layer_names:
+            QMessageBox().critical(
+                self.dockwidget,
+                self.tr('Missing Layer'),
+                self.tr('Cable layer is missing. Please reload the plugin.')
+            )
+        else:
+            for lyr in QgsProject.instance().mapLayers().values():
+                if lyr.name() == 'cable':
+                    self.iface.setActiveLayer(lyr)
+                    self.iface.activeLayer().startEditing()
+                    self._draw_line(lyr)
+
+    def _draw_line(self, layer):
+        """
+        Add a line feature in the Map Canvas.
+        """
+        pr = layer.dataProvider()
+        pr.addAttributes(
+            [QgsField("id_", QVariant.Int), ]
+            )
+        layer.updateFields()
+
+
+
 
 
